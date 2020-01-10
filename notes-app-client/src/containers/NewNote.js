@@ -3,6 +3,7 @@ import { FormGroup, FormControl, ControlLabel } from "react-bootstrap";
 import LoaderButton from "../components/LoaderButton";
 import config from "../config";
 import "./NewNote.css";
+import { s3Upload } from "../libs/awsLib";
 import { API } from "aws-amplify";
 
 export default function NewNote(props) {
@@ -27,18 +28,22 @@ export default function NewNote(props) {
 	        1000000} MB.`
 	    );
 	    return;
-	  }
+  	}
 
-	  setIsLoading(true);
+  setIsLoading(true);
 
-	  try {
-	    await createNote({ content });
-	    props.history.push("/");
-	  } catch (e) {
-	    alert(e);
-	    setIsLoading(false);
-	  }
-	}
+  try {
+    const attachment = file.current
+      ? await s3Upload(file.current)
+      : null;
+
+    await createNote({ content, attachment });
+    props.history.push("/");
+  } catch (e) {
+    alert(e);
+    setIsLoading(false);
+  }
+}
 
 	function createNote(note) {
 	  return API.post("notes", "/notes", {
